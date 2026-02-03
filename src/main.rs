@@ -516,7 +516,6 @@ impl App {
 
             KeyCode::Enter => {
                 self.push_history();
-
                 // Split the string
                 let chars: Vec<char> = self.data.lines[line_idx].text.chars().collect();
                 let (left, right) = chars.split_at(self.cursor_col);
@@ -641,87 +640,51 @@ impl UI {
         }
     }
 
-    fn render_active_line_anim(f: &mut Frame, app: &App, idx: usize, area: Rect) {
-        let line = &app.data.lines[idx];
-        let rel_time = app.current_time - line.start;
+    fn get_animated_line_spans<'a>(
+        line: &'a LyricLine,
+        current_time: f32,
+        is_active: bool,
+    ) -> Vec<Span<'a>> {
+        let rel_time = current_time - line.start;
         let target_idx = line.get_current_index(rel_time);
 
-        let spans: Vec<Span> = line
-            .text
+        line.text
             .chars()
             .enumerate()
             .map(|(i, c)| {
-                let mut color = Color::Rgb(255, 255, 255);
+                let mut style = Style::default();
 
-                if (target_idx < i as f32) {
-                    let dist = (i as f32 - target_idx).abs();
-                    let intensity = (1.0 - (dist / 2.0)).clamp(0.0, 1.0);
-                    color = Color::Rgb(
-                        // (60.0 + 40.0 * (1.0 - intensity)) as u8,
-                        (60.0 + 195.0 * intensity) as u8,
-                        (60.0 + 195.0 * intensity) as u8,
-                        // (60.0 + 100.0 * intensity) as u8,
-                        (60.0 + 40.0 * (1.0 - intensity)) as u8,
-                    );
+                if is_active {
+                    let mut color = Color::Rgb(255, 255, 255); // Default "played" color (White)
+
+                    if target_idx < i as f32 {
+                        // "Unplayed" or "Glow" logic
+                        let dist = (i as f32 - target_idx).abs();
+                        let intensity = (1.0 - (dist / 2.5)).clamp(0.0, 1.0);
+                        color = Color::Rgb(
+                            (60.0 + 195.0 * intensity) as u8,
+                            (60.0 + 195.0 * intensity) as u8,
+                            (60.0 + 40.0 * (1.0 - intensity)) as u8,
+                        );
+                    }
+                    style = style.fg(color).add_modifier(Modifier::BOLD);
+                } else {
+                    style = style.fg(Color::DarkGray);
                 }
-                Span::styled(c.to_string(), Style::default().fg(color))
+
+                Span::styled(c.to_string(), style)
             })
-            .collect();
+            .collect()
+    }
+
+    fn render_active_line_anim(f: &mut Frame, app: &App, idx: usize, area: Rect) {
+        let line = &app.data.lines[idx];
+        let spans = Self::get_animated_line_spans(line, app.current_time, true);
 
         f.render_widget(
             Paragraph::new(TuiLine::from(spans))
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::NONE)),
-            area,
-        );
-    }
-
-    fn render_editor_panel(f: &mut Frame, app: &App, idx: usize, area: Rect) {
-        let line = &app.data.lines[idx];
-        let rel_time = app.current_time - line.start;
-
-        let kfs = line
-            .keyframes
-            .iter()
-            .enumerate()
-            .map(|(ki, k)| {
-                let is_near = (k.time - rel_time).abs() < 0.1;
-                Span::styled(
-                    format!(
-                        " [KF{}: {:.2}s|{:.0}%] ",
-                        ki,
-                        k.time,
-                        (k.index / line.text.len().max(1) as f32) * 100.0
-                    ),
-                    Style::default().fg(if is_near {
-                        Color::Yellow
-                    } else {
-                        Color::DarkGray
-                    }),
-                )
-            })
-            .collect::<Vec<_>>();
-
-        let mode_str = if app.edit_mode == EditMode::Time {
-            "EDIT: TIME"
-        } else {
-            "EDIT: PROGRESS"
-        };
-
-        let ui_info = vec![
-            TuiLine::from(kfs),
-            TuiLine::from(Span::styled(
-                format!(" LINE {} | {}", idx + 1, mode_str),
-                Style::default().bg(Color::Cyan).fg(Color::Black),
-            )),
-            TuiLine::from(" [T] Toggle Edit Mode | [F] Add KF | [G/Del] Delete KF"),
-            TuiLine::from(" [J/K] Jump KF | [UP/DOWN] Adjust Value"),
-        ];
-
-        f.render_widget(
-            Paragraph::new(ui_info)
-                .block(Block::default().borders(Borders::TOP).title("Editor"))
-                .alignment(Alignment::Center),
             area,
         );
     }
@@ -735,27 +698,8 @@ impl UI {
 
         for (i, lyric) in app.data.lines.iter().enumerate() {
             let is_playing = Some(i) == active_idx;
-
-            // Check if this specific line is being edited
             let is_editing = is_text_editor && app.focus_line_index == Some(i);
-
             let is_selected = (app.manual_scroll && i == display_idx) || is_editing;
-
-            // Define base style
-            let style = if is_editing {
-                // When editing, use White text so the Blue cursor stands out clearly
-                Style::default().fg(Color::White)
-            } else if is_playing {
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD)
-            } else if is_selected {
-                Style::default()
-                    .fg(Color::Blue)
-                    .add_modifier(Modifier::REVERSED)
-            } else {
-                Style::default().fg(Color::DarkGray)
-            };
 
             let prefix = if is_playing {
                 " >> "
@@ -765,57 +709,70 @@ impl UI {
                 "    "
             };
 
-            // 1. Create Time and Prefix Spans
-            let time_span = Span::styled(
-                format!("[{:.2}] ", lyric.start),
-                Style::default().fg(Color::Gray),
-            );
-            let prefix_span = Span::styled(prefix, style);
+            // 1. Time and Prefix Spans
+            let mut line_spans = vec![
+                Span::styled(
+                    format!("[{:.2}] ", lyric.start),
+                    Style::default().fg(Color::Gray),
+                ),
+                Span::styled(
+                    prefix,
+                    if is_playing {
+                        Style::default().fg(Color::Green)
+                    } else {
+                        Style::default().fg(Color::Blue)
+                    },
+                ),
+            ];
 
-            let mut line_spans = vec![time_span, prefix_span];
-
-            // 2. Render Text (Character by Character if editing, otherwise as one block)
+            // 2. Render Text Content
             if is_editing {
+                // Text Edit Mode: Render with Cursor
                 let text_chars: Vec<char> = lyric.text.chars().collect();
-
                 for (char_idx, c) in text_chars.iter().enumerate() {
                     let char_style = if char_idx == app.cursor_col {
-                        // HIGHLIGHT CURSOR: Blue Background
-                        style.bg(Color::Blue).fg(Color::White)
+                        Style::default().bg(Color::Blue).fg(Color::White)
                     } else {
-                        style
+                        Style::default().fg(Color::White)
                     };
                     line_spans.push(Span::styled(c.to_string(), char_style));
                 }
-
-                // If cursor is at the end of the line (append mode), add a highlighted space
                 if app.cursor_col >= text_chars.len() {
-                    line_spans.push(Span::styled(" ", style.bg(Color::Blue)));
+                    line_spans.push(Span::styled(" ", Style::default().bg(Color::Blue)));
                 }
+            } else if is_playing {
+                let animated_content =
+                    Self::get_animated_line_spans(lyric, app.current_time, is_playing);
+                line_spans.extend(animated_content);
             } else {
-                // Standard rendering for non-edited lines
+                // Standard Idle Line
+                let style = if is_selected {
+                    Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::REVERSED)
+                } else {
+                    Style::default().fg(Color::DarkGray)
+                };
                 line_spans.push(Span::styled(lyric.text.clone(), style));
             }
 
             tui_lines.push(TuiLine::from(line_spans));
         }
 
-        // Adjust scroll to follow the editor cursor if active
+        // Scroll logic (unchanged)
         let scroll_target = if is_text_editor {
             app.focus_line_index.unwrap_or(display_idx)
         } else {
             display_idx
         };
-
         let scroll_pos = if scroll_target > 5 {
             (scroll_target - 5) as u16
         } else {
             0
         };
 
-        // Update title to indicate mode
         let title = if is_text_editor {
-            " EDIT MODE [ESC] "
+            " Exit Edit [ESC] "
         } else {
             " [E] EDIT "
         };
@@ -827,6 +784,56 @@ impl UI {
 
         f.render_widget(p, area);
     }
+}
+
+fn render_keyframe_editor_panel(f: &mut Frame, app: &App, idx: usize, area: Rect) {
+    let line = &app.data.lines[idx];
+    let rel_time = app.current_time - line.start;
+
+    let kfs = line
+        .keyframes
+        .iter()
+        .enumerate()
+        .map(|(ki, k)| {
+            let is_near = (k.time - rel_time).abs() < 0.1;
+            Span::styled(
+                format!(
+                    " [KF{}: {:.2}s|{:.0}%] ",
+                    ki,
+                    k.time,
+                    (k.index / line.text.len().max(1) as f32) * 100.0
+                ),
+                Style::default().fg(if is_near {
+                    Color::Yellow
+                } else {
+                    Color::DarkGray
+                }),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let mode_str = if app.edit_mode == EditMode::Time {
+        "EDIT: TIME"
+    } else {
+        "EDIT: PROGRESS"
+    };
+
+    let ui_info = vec![
+        TuiLine::from(kfs),
+        TuiLine::from(Span::styled(
+            format!(" LINE {} | {}", idx + 1, mode_str),
+            Style::default().bg(Color::Cyan).fg(Color::Black),
+        )),
+        TuiLine::from(" [T] Toggle Edit Mode | [F] Add KF | [G/Del] Delete KF"),
+        TuiLine::from(" [J/K] Jump KF | [UP/DOWN] Adjust Value"),
+    ];
+
+    f.render_widget(
+        Paragraph::new(ui_info)
+            .block(Block::default().borders(Borders::TOP).title("Editor"))
+            .alignment(Alignment::Center),
+        area,
+    );
 }
 
 fn main() -> io::Result<()> {

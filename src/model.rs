@@ -8,7 +8,7 @@ static LINE_SYLABLE_KEYFRAME_MARKER: &str = "[lsk]";
 #[derive(Clone, Debug, PartialEq)]
 pub struct Keyframe {
     pub time: f32,
-    pub index: f32,
+    pub index: f32, // TODO: use progress
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -22,6 +22,7 @@ pub struct LyricLine {
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AnimationData {
+    // TODO: Implement as a flat map
     pub lines: Vec<LyricLine>,
 }
 
@@ -95,15 +96,20 @@ impl LyricLine {
 impl AnimationData {
     pub fn demo() -> Self {
         let mut data = AnimationData::default();
-        data.add_line("You never shined so brightly", 0.0, 7.112)
-            .add_kf_pct(0.0, 0.0)
-            .add_kf_pct(0.4, 0.20)
-            .add_kf_pct(5.4, 0.90)
-            .add_kf_pct(7.0, 1.0);
 
-        data.add_line("I'd give my all for your love tonight", 8.0, 17.35)
+        data.add_line("City of stars", 0.0, 3.42)
             .add_kf_pct(0.0, 0.0)
-            .add_kf_pct(4.0, 1.0);
+            .add_kf_pct(1.2, 0.7)
+            .add_kf_pct(3.42, 1.0);
+        data.add_line(
+            "You never shined so brightly",
+            3.42 + 0.5,
+            3.42 + 0.5 + 7.112,
+        )
+        .add_kf_pct(0.0, 0.0)
+        .add_kf_pct(0.4, 0.20)
+        .add_kf_pct(5.4, 0.90)
+        .add_kf_pct(7.0, 1.0);
         data
     }
 
