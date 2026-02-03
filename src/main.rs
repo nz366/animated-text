@@ -793,43 +793,58 @@ impl UI {
             .keyframes
             .iter()
             .enumerate()
-            .map(|(ki, k)| {
+            .flat_map(|(ki, k)| {
                 let is_near = (k.time - rel_time).abs() < 0.1;
-                Span::styled(
-                    format!(
-                        " [KF{}: {:.2}s|{:.0}%] ",
-                        ki,
-                        k.time,
-                        (k.index / line.text.len().max(1) as f32) * 100.0
-                    ),
-                    Style::default().fg(if is_near {
-                        Color::Yellow
-                    } else {
-                        Color::DarkGray
-                    }),
-                )
-            })
-            .collect::<Vec<_>>();
+                let base_fg = if is_near {
+                    Color::Yellow
+                } else {
+                    Color::DarkGray
+                };
 
-        let mode_str = if app.edit_mode == EditMode::Time {
-            "EDIT: TIME"
-        } else {
-            "EDIT: PROGRESS"
-        };
+                // Determine which part to highlight with a Blue background
+                let time_style = if app.edit_mode == EditMode::Time && is_near {
+                    Style::default().bg(Color::Blue).fg(Color::White)
+                } else {
+                    Style::default().fg(base_fg)
+                };
+
+                let progress_style = if app.edit_mode == EditMode::Progress && is_near {
+                    Style::default().bg(Color::Blue).fg(Color::White)
+                } else {
+                    Style::default().fg(base_fg)
+                };
+
+                // Return a vector of spans for this specific keyframe
+                vec![
+                    Span::styled(format!(" [KF{}: ", ki), Style::default().fg(base_fg)),
+                    Span::styled(format!("{:.2}s", k.time), time_style),
+                    Span::styled("|", Style::default().fg(base_fg)),
+                    Span::styled(
+                        format!("{:.0}%", (k.index / line.text.len().max(1) as f32) * 100.0),
+                        progress_style,
+                    ),
+                    Span::styled("] ", Style::default().fg(base_fg)),
+                ]
+            })
+            .collect::<Vec<Span>>();
 
         let ui_info = vec![
             TuiLine::from(kfs),
-            TuiLine::from(Span::styled(
-                format!(" LINE {} | {}", idx + 1, mode_str),
-                Style::default().bg(Color::Cyan).fg(Color::Black),
-            )),
+            // TuiLine::from(Span::styled(
+            //     format!(" LINE {} | {}", idx + 1, mode_str),
+            //     Style::default().bg(Color::Cyan).fg(Color::Black),
+            // )),
             TuiLine::from(" [T] Toggle Edit Mode | [F] Add | [G/Del] Delete"),
             TuiLine::from(" [J/K] Jump | [UP/DOWN] Adjust Value"),
         ];
 
         f.render_widget(
             Paragraph::new(ui_info)
-                .block(Block::default().borders(Borders::TOP).title("Editor"))
+                .block(
+                    Block::default()
+                        .borders(Borders::TOP)
+                        .title("KeyFrame Editor"),
+                )
                 .alignment(Alignment::Center),
             area,
         );
