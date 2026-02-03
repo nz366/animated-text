@@ -22,10 +22,10 @@ Compared to other formats:
  
 | Features     | Animated Text | AMLL | TTML | LRC | WebVTT | Srt |
 |--------------|---------------|------|------|-----|--------|-----|
-| Editor       | WIP           | [x]  | [x]  | [x] |        |     |
-| Plain Text   | [x]           |      |      |     |        |     |
-| Lines        | WIP           | [x]  | [x]  | [x] |        |     |
-| Syllables    | WIP           | [x]  | [x]  |     |        |     |
+| Editor       | ✅           | [x]  | [x]  | [x] |        |     |
+| Plain Text   | ✅           |      |      |     |        |     |
+| Lines        | ✅           | [x]  | [x]  | [x] |        |     |
+| Syllables    | ✅           | [x]  | [x]  |     |        |     |
 | Duets        | WIP           | [-]  | [-]  |     |        |     |
 | Idols        | WIP           |      |      |     |        |     |
 | File Size    | LOW           | HIGH  | HIGH  | MINIMUM |  LOW      |     |
