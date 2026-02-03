@@ -13,6 +13,7 @@ An experimental format is a compatible fromat that unifies features from various
 Reserved Characters:
 
 [] is a reserved character to indicate data used by the format reader.
+
 /  are generally used as seperators inside class properties.
 
 
