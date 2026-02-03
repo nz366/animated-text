@@ -1,5 +1,5 @@
 # animated-text
-Refernce Implementation of experimental LRC file alternative
+Refernce Implementation and Editor of experimental LRC file alternative
 
 
 # Animated Text Storage Format. 
@@ -27,19 +27,18 @@ Compared to other formats:
 | Syllables    | WIP           | [x]  | [x]  |     |        |     |
 | Duets        | WIP           | [-]  | [-]  |     |        |     |
 | Idols        | WIP           |      |      |     |        |     |
-| File Size    | LOW           | HIGH  | HIGH  | MIN. |  MID.      |   MID.  |
-| Complexity   | High          | Medium | Medium | Low |        |     |
+| File Size    | LOW           | HIGH  | HIGH  | MINIMUM |  LOW      |     |
 | Streamable   | WIP           | TBD  | TBD  |     |        |     |
 | Positioning  | WIP           | TBD  | TBD  |     |        | [x] |
 | Sel. Language | WIP           |    |    |     |        |  |
 | **Interop.**     | **Animated Text** | **AMLL** | **TTML** | **LRC** | **WebVTT** | **Srt** |
 |               |      |      |      |        |     |              |
-Animated Text  |   Full         |   WIP   |  WIP    |   Full (WIP)  |   WIP      | WIP
-AMLL				   |               |    Full  | Full     |      |        |
-TTML 				   |               |      |  Full    |  Full    |        |
-LRC					   |   Part.            |      |      |      |        |
-WebVTT			   |               |      |      |      |        |     |
-Srt					   |               |      |      |      |        |     |
+| Animated Text  |   Full         |   WIP   |  WIP    |   Full (WIP)  |   WIP      | WIP
+| AMLL				   |               |    Full  | Full     |      |        |
+| TTML 				   |               |      |  Full    |  Full    |        |
+| LRC				   |   Partial     |      |      |      |        |
+| WebVTT			   |               |      |      |      |        |     |
+| Srt				   |               |      |      |      |        |     |
 
 
 

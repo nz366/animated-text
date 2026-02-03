@@ -1,0 +1,11 @@
+import { cargoBuild } from "rust";
+import * as std from "std";
+
+ 
+
+export default function (): std.Recipe<std.Directory> {
+  return cargoBuild({
+    source: Brioche.glob("src", "Cargo.*"),
+  });
+}
+
