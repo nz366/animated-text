@@ -631,7 +631,7 @@ impl UI {
 
         if let Some(idx) = active_idx {
             Self::render_active_line_anim(f, app, idx, chunks[0]);
-            Self::render_editor_panel(f, app, idx, chunks[1]);
+            Self::render_keyframe_editor_panel(f, app, idx, chunks[1]);
         } else {
             f.render_widget(
                 Paragraph::new("Waiting for next line...").alignment(Alignment::Center),
@@ -784,56 +784,56 @@ impl UI {
 
         f.render_widget(p, area);
     }
-}
 
-fn render_keyframe_editor_panel(f: &mut Frame, app: &App, idx: usize, area: Rect) {
-    let line = &app.data.lines[idx];
-    let rel_time = app.current_time - line.start;
+    fn render_keyframe_editor_panel(f: &mut Frame, app: &App, idx: usize, area: Rect) {
+        let line = &app.data.lines[idx];
+        let rel_time = app.current_time - line.start;
 
-    let kfs = line
-        .keyframes
-        .iter()
-        .enumerate()
-        .map(|(ki, k)| {
-            let is_near = (k.time - rel_time).abs() < 0.1;
-            Span::styled(
-                format!(
-                    " [KF{}: {:.2}s|{:.0}%] ",
-                    ki,
-                    k.time,
-                    (k.index / line.text.len().max(1) as f32) * 100.0
-                ),
-                Style::default().fg(if is_near {
-                    Color::Yellow
-                } else {
-                    Color::DarkGray
-                }),
-            )
-        })
-        .collect::<Vec<_>>();
+        let kfs = line
+            .keyframes
+            .iter()
+            .enumerate()
+            .map(|(ki, k)| {
+                let is_near = (k.time - rel_time).abs() < 0.1;
+                Span::styled(
+                    format!(
+                        " [KF{}: {:.2}s|{:.0}%] ",
+                        ki,
+                        k.time,
+                        (k.index / line.text.len().max(1) as f32) * 100.0
+                    ),
+                    Style::default().fg(if is_near {
+                        Color::Yellow
+                    } else {
+                        Color::DarkGray
+                    }),
+                )
+            })
+            .collect::<Vec<_>>();
 
-    let mode_str = if app.edit_mode == EditMode::Time {
-        "EDIT: TIME"
-    } else {
-        "EDIT: PROGRESS"
-    };
+        let mode_str = if app.edit_mode == EditMode::Time {
+            "EDIT: TIME"
+        } else {
+            "EDIT: PROGRESS"
+        };
 
-    let ui_info = vec![
-        TuiLine::from(kfs),
-        TuiLine::from(Span::styled(
-            format!(" LINE {} | {}", idx + 1, mode_str),
-            Style::default().bg(Color::Cyan).fg(Color::Black),
-        )),
-        TuiLine::from(" [T] Toggle Edit Mode | [F] Add KF | [G/Del] Delete KF"),
-        TuiLine::from(" [J/K] Jump KF | [UP/DOWN] Adjust Value"),
-    ];
+        let ui_info = vec![
+            TuiLine::from(kfs),
+            TuiLine::from(Span::styled(
+                format!(" LINE {} | {}", idx + 1, mode_str),
+                Style::default().bg(Color::Cyan).fg(Color::Black),
+            )),
+            TuiLine::from(" [T] Toggle Edit Mode | [F] Add | [G/Del] Delete"),
+            TuiLine::from(" [J/K] Jump | [UP/DOWN] Adjust Value"),
+        ];
 
-    f.render_widget(
-        Paragraph::new(ui_info)
-            .block(Block::default().borders(Borders::TOP).title("Editor"))
-            .alignment(Alignment::Center),
-        area,
-    );
+        f.render_widget(
+            Paragraph::new(ui_info)
+                .block(Block::default().borders(Borders::TOP).title("Editor"))
+                .alignment(Alignment::Center),
+            area,
+        );
+    }
 }
 
 fn main() -> io::Result<()> {
