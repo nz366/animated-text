@@ -162,7 +162,7 @@ impl fmt::Display for AnimationData {
 
         write!(
             f,
-            "{}\n{}\n{}[{}]\n{}[{}]",
+            "{}\n{}\n{}[{}]\n{}[{}]\n",
             s1,
             DATA_SECTION_SPLIT_MARKER,
             LINE_BY_LINE_TIMESTAMP_MARKER,

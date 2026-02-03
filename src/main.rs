@@ -428,6 +428,13 @@ impl App {
             return;
         };
 
+        if key.modifiers.contains(KeyModifiers::CONTROL) {
+            if key.code == KeyCode::Char('z') {
+                self.undo();
+                return;
+            }
+        }
+
         match key.code {
             // --- NAVIGATION ---
             KeyCode::Left => {
@@ -545,10 +552,6 @@ impl App {
             }
 
             // --- UNDO ---
-            KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                self.undo();
-            }
-
             _ => {}
         }
     }
