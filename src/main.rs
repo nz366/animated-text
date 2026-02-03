@@ -797,7 +797,12 @@ impl UI {
             .iter()
             .enumerate()
             .flat_map(|(ki, k)| {
-                let is_near = (k.time - rel_time).abs() < 0.1;
+                let is_near = if let Some(aki) = app.active_kf_index {
+                    ki == aki
+                } else {
+                    (k.time - rel_time).abs() < 0.1
+                };
+
                 let base_fg = if is_near {
                     Color::Yellow
                 } else {
