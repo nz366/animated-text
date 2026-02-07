@@ -2,6 +2,7 @@
 name = "animated-text"
 version = "0.1.0"
 edition = "2024"
+authors = ["@nz366"]
 
 [dependencies]
 crossterm = "0.29.0"
