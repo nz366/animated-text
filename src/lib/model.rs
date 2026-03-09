@@ -1,5 +1,6 @@
 use std::fmt;
 use std::str::FromStr;
+mod ttml;
 
 static DATA_SECTION_SPLIT_MARKER: &str = "[//]";
 static LINE_BY_LINE_TIMESTAMP_MARKER: &str = "[lbl]";
@@ -24,6 +25,9 @@ pub struct LyricLine {
 pub struct AnimationData {
     // TODO: Implement as a flat map
     pub lines: Vec<LyricLine>,
+
+    // pub idols: Vec<String>,
+
 }
 
 impl Keyframe {
@@ -110,6 +114,8 @@ impl AnimationData {
         .add_kf_pct(0.4, 0.20)
         .add_kf_pct(5.4, 0.90)
         .add_kf_pct(7.0, 1.0);
+
+        data.end_section();
         data
     }
 
@@ -117,6 +123,11 @@ impl AnimationData {
         let line = LyricLine::new(text.to_string(), start, end);
         self.lines.push(line);
         self.lines.last_mut().unwrap()
+    }
+
+
+    pub fn end_section(&mut self){
+        self.add_line("", self.lines.last().unwrap().end + 0.1, self.lines.last().unwrap().end + 0.1);
     }
 }
 

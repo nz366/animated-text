@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Quick Pulse Popup",
+  "version": "1.0",
+  "description": "A beautiful, build-tool-free Chrome extension popup.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*"
+  ]
+}
