@@ -5,15 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Quick Pulse</title>
+    <title>Animated Text</title>
 </head>
 
 <body>
     <div class="container">
         <header>
-            <h1>Quick Pulse</h1>
-            <p>Welcome to your extension!</p>
-            <div id="wsStatus" class="ws-status">Connecting...</div>
+            <h1>Animated Text</h1>
+            <p>Audio Syncronizer</p>
         </header>
         <main>
             <div class="card status-card">
@@ -29,15 +28,18 @@
                     <button id="forwardBtn" class="control-btn" title="Forward 10s">⏩</button>
                 </div>
             </div>
-            <div class="card">
+            <!-- <div class="card">
                 <button id="clickMe" class="btn">Click for Magic</button>
                 <div id="message" class="message hidden">
                     <p>✨ Stay Inspired! ✨</p>
                 </div>
-            </div>
+            </div> -->
         </main>
         <footer>
-            <p>No Build Tools • Pure JS</p>
+
+            <p>
+            <div id="wsStatus" class="ws-status">Connecting...</div>
+            </p>
         </footer>
     </div>
     <script src="popup.js"></script>

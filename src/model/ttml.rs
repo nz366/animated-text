@@ -1,11 +1,7 @@
-use crate::model::{AnimationData, LyricLine};
-
-use lyrics_helper_core::{ContentType, TtmlParsingOptions};
-use ttml_processor::parse_ttml;
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use lyrics_helper_core::{ContentType, TtmlParsingOptions};
+    use ttml_processor::parse_ttml;
 
     #[test]
     fn test_ttml_parsing_accuracy() {

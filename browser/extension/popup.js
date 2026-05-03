@@ -1,5 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const PORT = 3004;
+
     const button = document.getElementById('clickMe');
+
     const message = document.getElementById('message');
 
     // YouTube Controls
@@ -24,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let socket = null;
 
     function setupWebSocket() {
-        socket = new WebSocket('ws://127.0.0.1:3000/ws');
+        socket = new WebSocket(`ws://127.0.0.1:${PORT}/ws`);
 
         socket.onopen = () => {
             console.log('Connected to remote-music-control server');
@@ -34,10 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         socket.onmessage = (event) => {
-            const command = event.data;
-            console.log('Received command from server:', command);
-            if (['play', 'pause', 'stop', 'forward', 'rewind'].includes(command)) {
-                sendCommand(command).then(updateStatus);
+            let request;
+            try {
+                request = JSON.parse(event.data);
+            } catch (e) {
+                request = { command: event.data };
+            }
+
+            console.log('Received command from server:', request);
+            if (['play', 'pause', 'stop', 'forward', 'rewind', 'seek'].includes(request.command)) {
+                sendCommand(request).then(updateStatus);
             }
         };
 
@@ -56,16 +65,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    async function sendCommand(command, fromUser = false) {
+    async function sendCommand(request, fromUser = false) {
+        // If it's a string, wrap it for content script
+        const msg = typeof request === 'string' ? { command: request } : request;
+
         // If it's a user action, also send to WebSocket so server knows
         if (fromUser && socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(command);
+            socket.send(msg.command);
         }
 
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab?.url?.includes('youtube.com')) {
             try {
-                const response = await chrome.tabs.sendMessage(tab.id, { command });
+                const response = await chrome.tabs.sendMessage(tab.id, msg);
                 return response;
             } catch (err) {
                 console.error('Error sending message:', err);

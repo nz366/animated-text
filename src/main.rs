@@ -4,29 +4,21 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 
-use ratatui::{
-    backend::CrosstermBackend,
-    Terminal,
-};
+use ratatui::{Terminal, backend::CrosstermBackend};
 
-use std::{
-    io,
-    time::Duration,
-};
+use std::{io, time::Duration};
 
 mod model;
-mod tui;
 mod remote;
+mod tui;
 
 use tui::{App, UI, ViewMode};
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-
     // Start remote server
-    let remote_tx = remote::start_server(3000);
+    let remote_tx = remote::start_server(3004);
 
-    // e to edit texts
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -43,20 +35,28 @@ async fn main() -> io::Result<()> {
         tokio::select! {
             result = async {
                 if event::poll(Duration::from_millis(16))? {
-                    if let Event::Key(key) = event::read()? {
-                        return Ok::<Option<event::KeyEvent>, io::Error>(Some(key));
-                    }
+                    return Ok::<Option<Event>, io::Error>(Some(event::read()?));
                 }
                 Ok(None)
             } => {
-                if let Ok(Some(key)) = result {
-                    if app.view_mode == ViewMode::TextEdit {
-                        app.handle_text_edits(key);
-                    } else {
-                        if key.code == KeyCode::Char('q') {
-                            break;
+                if let Ok(Some(ev)) = result {
+                    match ev {
+                        Event::Key(key) => {
+                            if app.view_mode == ViewMode::TextEdit {
+                                app.handle_text_edits(key);
+                            } else {
+                                if key.code == KeyCode::Char('q') {
+                                    break;
+                                }
+                                app.handle_control_input(key);
+                            }
                         }
-                        app.handle_control_input(key);
+                        Event::Paste(text) => {
+                            if app.view_mode == ViewMode::TextEdit {
+                                app.insert_text(&text);
+                            }
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -75,8 +75,8 @@ async fn main() -> io::Result<()> {
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
-    let data = app.compile();
+    let data = app.data.compile();
     print!("{}", data);
-    
+
     Ok(())
 }

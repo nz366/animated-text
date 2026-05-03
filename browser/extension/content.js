@@ -14,6 +14,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case 'pause':
             video.pause();
             break;
+        case 'seek':
+            video.currentTime = request.time;
+            break;
         case 'rewind':
             video.currentTime -= 10;
             break;

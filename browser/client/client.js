@@ -25,17 +25,28 @@ function connect() {
     };
 
     socket.onmessage = (event) => {
-        const cmd = event.data;
-        console.log('Received command:', cmd);
-        
-        switch(cmd) {
-            case 'play':
-                audioPlayer.play().catch(e => console.error('Play failed:', e));
+        let request;
+        try {
+            request = JSON.parse(event.data);
+        } catch (e) {
+            request = { command: event.data };
+        }
+
+        console.log("Received command:", request);
+
+        switch (request.command) {
+            case "play":
+                audioPlayer.play().catch(e => console.error("Play failed:", e));
                 break;
-            case 'pause':
+            case "pause":
                 audioPlayer.pause();
                 break;
-            case 'stop':
+            case "seek":
+                if (request.time !== undefined) {
+                    audioPlayer.currentTime = request.time;
+                }
+                break;
+            case "stop":
                 audioPlayer.pause();
                 audioPlayer.currentTime = 0;
                 break;
@@ -47,7 +58,9 @@ function connect() {
     };
 }
 
+// 🔥 Call connect OUTSIDE the function
 connect();
+
 
 // Drag & Drop Logic
 dropzone.addEventListener('dragover', (e) => {
@@ -62,7 +75,7 @@ dropzone.addEventListener('dragleave', () => {
 dropzone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropzone.classList.remove('dragover');
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
         loadFile(files[0]);
@@ -81,7 +94,8 @@ function loadFile(file) {
     console.log('File loaded:', file.name);
 }
 
-// Optional: prevent spacebar from scrolling when audio is focused
+
+// Prevent spacebar from scrolling
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && e.target === document.body) {
         e.preventDefault();

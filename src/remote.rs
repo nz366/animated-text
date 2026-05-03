@@ -25,9 +25,16 @@ pub fn start_server(port: u16) -> broadcast::Sender<String> {
 
         // Run it
         let addr = SocketAddr::from(([127, 0, 0, 1], port));
-        let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-        let _ = tx_clone.send(format!("Listening on {}", addr));
-        axum::serve(listener, app).await.unwrap();
+        let listener = tokio::net::TcpListener::bind(addr).await;
+        match listener {
+            Ok(listener) => {
+                let _ = tx_clone.send(format!("Listening on {}", addr));
+                axum::serve(listener, app).await.unwrap();
+            },
+            Err(e) => {
+                let _ = tx_clone.send(format!("Error: {}", e));
+            }
+        }
     });
 
     tx
