@@ -113,7 +113,9 @@ impl AnimationData {
     pub fn new() -> Self {
         let empty_line = TextSegment::new(" ".to_string(), 0.0, 0.0);
 
-        Self { lines: vec![empty_line]}
+        Self {
+            lines: vec![empty_line],
+        }
     }
 
     pub fn compile(&self) -> String {

@@ -1,5 +1,5 @@
-use crate::tui::app::App;
 use crate::model::TextSegment;
+use crate::tui::app::App;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 impl App {
@@ -21,7 +21,7 @@ impl App {
         } else {
             return;
         };
- 
+
         if key.modifiers.contains(KeyModifiers::CONTROL) {
             if key.code == KeyCode::Char('z') {
                 self.undo();
@@ -29,12 +29,10 @@ impl App {
             }
             if key.code == KeyCode::Char('v') {
                 match arboard::Clipboard::new() {
-                    Ok(mut cb) => {
-                        match cb.get_text() {
-                            Ok(text) => self.insert_text(&text),
-                            Err(e) => self.server_status = format!("Paste err: {}", e),
-                        }
-                    }
+                    Ok(mut cb) => match cb.get_text() {
+                        Ok(text) => self.insert_text(&text),
+                        Err(e) => self.server_status = format!("Paste err: {}", e),
+                    },
                     Err(e) => self.server_status = format!("Cb init err: {}", e),
                 }
                 return;
@@ -181,7 +179,7 @@ impl App {
 
             // First line gets prefix + first pasted line
             self.data.lines[line_idx].text = format!("{}{}", prefix_str, lines[0]);
-            
+
             // "Minute automatic filling": each line gets 60s and they are sequential
             let first_line_start = self.data.lines[line_idx].start;
             self.data.lines[line_idx].end = first_line_start + 60.0;

@@ -302,8 +302,8 @@ impl App {
                     if let Some(idx) = self.get_active_line_index() {
                         self.push_history();
                         let duration = self.data.lines[idx].start - self.current_time;
-                        self.data.lines[idx].end = self.current_time +  duration;
-                    }q
+                        self.data.lines[idx].end = self.current_time + duration;
+                    }
                 }
                 KeyCode::Home => {
                     if self.scroll_offset < self.data.lines.len() {
@@ -327,15 +327,18 @@ impl App {
                             }
                         }
 
-
                         if (self.scroll_offset < self.data.lines.len() - 1) {
-                            if(self.data.lines[self.scroll_offset + 1].text.trim().is_empty()){
-                                if(self.scroll_offset < self.data.lines.len()-2){
+                            if (self.data.lines[self.scroll_offset + 1]
+                                .text
+                                .trim()
+                                .is_empty())
+                            {
+                                if (self.scroll_offset < self.data.lines.len() - 2) {
                                     self.scroll_offset += 2;
-                                }else{
+                                } else {
                                     self.scroll_offset += 1;
                                 }
-                            }else{
+                            } else {
                                 self.scroll_offset += 1;
                             }
                         } else {

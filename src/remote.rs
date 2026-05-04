@@ -1,7 +1,10 @@
 use axum::{
-    extract::{ws::{Message, WebSocket, WebSocketUpgrade}, State},
-    routing::get,
     Router,
+    extract::{
+        State,
+        ws::{Message, WebSocket, WebSocketUpgrade},
+    },
+    routing::get,
 };
 use futures_util::{SinkExt, StreamExt};
 use std::net::SocketAddr;
@@ -17,11 +20,19 @@ pub fn start_server(port: u16) -> broadcast::Sender<String> {
         // Build our application with a route
         let app = Router::new()
             // Extract `tx` from the application State
-            .route("/ws", get(|ws: WebSocketUpgrade, State(tx): State<broadcast::Sender<String>>| async move {
-                ws.on_upgrade(move |socket| handle_socket(socket, tx))
-            }))
+            .route(
+                "/ws",
+                get(
+                    |ws: WebSocketUpgrade, State(tx): State<broadcast::Sender<String>>| async move {
+                        ws.on_upgrade(move |socket| handle_socket(socket, tx))
+                    },
+                ),
+            )
             .with_state(tx_clone.clone())
-            .fallback_service(ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/browser/client")));
+            .fallback_service(ServeDir::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/browser/client"
+            )));
 
         // Run it
         let addr = SocketAddr::from(([127, 0, 0, 1], port));
@@ -30,7 +41,7 @@ pub fn start_server(port: u16) -> broadcast::Sender<String> {
             Ok(listener) => {
                 let _ = tx_clone.send(format!("Listening on {}", addr));
                 axum::serve(listener, app).await.unwrap();
-            },
+            }
             Err(e) => {
                 let _ = tx_clone.send(format!("Error: {}", e));
             }
